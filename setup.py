@@ -5,15 +5,22 @@ import sys
 from setuptools import setup
 from setuptools.command.install import install
 from setuptools.command.build_ext import build_ext
+from setuptools.command.build_py import build_py
 import subprocess
 
 
-class PyoorbBuild(build_ext):
+class PyoorbBuild(build_py):
     def run(self):
-        # super().run(self)
+        self.run_command('build_ext')
+        return super().run()
+
+
+class PyoorbBuildExt(build_ext):
+    def run(self):
         self.configure()
         self.make()
         self.download_ephem()
+        return super().run()
 
     def configure(self):
         cmd = [
@@ -42,7 +49,8 @@ class PyoorbInstall(install):
 
 setup(
     cmdclass={
-        'build_ext': PyoorbBuild,
+        'build': PyoorbBuild,
+        'build_ext': PyoorbBuildExt,
         'install': PyoorbInstall
     }
 )
