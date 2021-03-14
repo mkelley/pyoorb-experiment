@@ -1,0 +1,1 @@
+Goal: make a pip-installable pyoorb
