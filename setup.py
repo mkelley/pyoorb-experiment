@@ -53,7 +53,14 @@ class PyoorbBuildExt(build_ext):
             shutil.copy(f, 'src')
 
 
+def version():
+    """Generate version using oorb script."""
+    cmd = ['./build-tools/compute-version.sh']
+    return subprocess.check_output(cmd, cwd='oorb').decode().strip()
+
+
 setup(
+    version=version(),
     cmdclass={
         'build_ext': PyoorbBuildExt
     },
