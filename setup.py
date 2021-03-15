@@ -16,6 +16,7 @@ class PyoorbBuildSrc(build_src):
         self.make()
         self.download_ephem()
         self.copy_files()
+        super().run()
 
     def configure(self):
         """Configures oorb to build with gfortran and optimization."""
@@ -53,8 +54,6 @@ class PyoorbBuildSrc(build_src):
         ]
         for f in files:
             shutil.copy(f, 'src')
-
-        super().run()
 
 
 def version():
