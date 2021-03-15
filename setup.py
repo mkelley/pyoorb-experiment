@@ -5,20 +5,20 @@ import os
 from glob import glob
 import shutil
 from numpy.distutils.core import setup, Extension as NumpyExtension
-from numpy.distutils.command.build_ext import build_ext
+from numpy.distutils.command.build_src import build_src
 
 import subprocess
 
 
-class PyoorbBuildExt(build_ext):
+class PyoorbBuildSrc(build_src):
     def run(self):
         self.configure()
         self.make()
         self.download_ephem()
         self.copy_files()
-        super().run()
 
     def configure(self):
+        """Configures oorb to build with gfortran and optimization."""
         cmd = [
             './configure',
             'gfortran',
@@ -27,10 +27,12 @@ class PyoorbBuildExt(build_ext):
         subprocess.check_call(cmd, cwd='oorb')
 
     def make(self):
+        """Builds oorb."""
         cmd = ['make', '-j']
         subprocess.check_call(cmd, cwd='oorb')
 
     def download_ephem(self):
+        """Downloads the default oorb ephemeris."""
         cmd = ['make', 'ephem']
         subprocess.check_call(cmd, cwd='oorb')
 
@@ -52,6 +54,8 @@ class PyoorbBuildExt(build_ext):
         for f in files:
             shutil.copy(f, 'src')
 
+        super().run()
+
 
 def version():
     """Generate version using oorb script."""
@@ -62,7 +66,7 @@ def version():
 setup(
     version=version(),
     cmdclass={
-        'build_ext': PyoorbBuildExt
+        'build_src': PyoorbBuildSrc
     },
     ext_modules=[NumpyExtension(
         'pyoorb.ext', ['src/pyoorb.f90'],

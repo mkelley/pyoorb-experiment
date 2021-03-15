@@ -1,6 +1,6 @@
 This repository is a demo to make a pip-installable pyoorb.  pyoorb is the python interface to [OpenOrb](https://github.com/oorb/oorb), an orbit computation package.  The original pyoorb source is distributed with OpenOrb.
 
-Only the de430 ephemeris files are downloaded.
+Only the default ephemeris data are downloaded.
 
 ## Install
 
