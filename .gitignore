@@ -70,3 +70,5 @@ distribute-*.tar.gz
 
 # visual studio code settings
 .vscode
+
+src/

@@ -1,18 +1,13 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-import sys
-from setuptools import setup
-from setuptools.command.install import install
-from setuptools.command.build_ext import build_ext
-from setuptools.command.build_py import build_py
+import os
+from glob import glob
+import shutil
+from numpy.distutils.core import setup, Extension as NumpyExtension
+from numpy.distutils.command.build_ext import build_ext
+
 import subprocess
-
-
-class PyoorbBuild(build_py):
-    def run(self):
-        self.run_command('build_ext')
-        return super().run()
 
 
 class PyoorbBuildExt(build_ext):
@@ -20,15 +15,14 @@ class PyoorbBuildExt(build_ext):
         self.configure()
         self.make()
         self.download_ephem()
-        return super().run()
+        self.copy_files()
+        super().run()
 
     def configure(self):
         cmd = [
             './configure',
             'gfortran',
             'opt',
-            '--with-pyoorb',
-            f'--prefix={sys.prefix}'
         ]
         subprocess.check_call(cmd, cwd='oorb')
 
@@ -40,17 +34,35 @@ class PyoorbBuildExt(build_ext):
         cmd = ['make', 'ephem']
         subprocess.check_call(cmd, cwd='oorb')
 
-
-class PyoorbInstall(install):
-    def run(self):
-        cmd = ['make', 'install']
-        subprocess.check_call(cmd, cwd='oorb')
+    def copy_files(self):
+        """Copies fortran-python interface and supporting files."""
+        if not os.path.exists('src'):
+            os.mkdir('src')
+        files = [
+            'oorb/build/planetary_data.mod',
+            'oorb/build/base_cl.mod',
+            'oorb/build/time_cl.mod',
+            'oorb/build/sphericalcoordinates_cl.mod',
+            'oorb/build/observatories_cl.mod',
+            'oorb/build/orbit_cl.mod',
+            'oorb/build/stochasticorbit_cl.mod',
+            'oorb/build/physicalparameters_cl.mod',
+            'oorb/python/pyoorb.f90',
+        ]
+        for f in files:
+            shutil.copy(f, 'src')
 
 
 setup(
     cmdclass={
-        'build': PyoorbBuild,
-        'build_ext': PyoorbBuildExt,
-        'install': PyoorbInstall
-    }
+        'build_ext': PyoorbBuildExt
+    },
+    ext_modules=[NumpyExtension(
+        'pyoorb.ext', ['src/pyoorb.f90'],
+        libraries=['lapack'],
+        extra_objects=['oorb/lib/liboorb.a']
+    )],
+    data_files=[
+        ('oorb', glob('oorb/data/*.dat') + ['oorb/VERSION'])
+    ]
 )
