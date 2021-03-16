@@ -1,4 +1,4 @@
-This repository is a demo to make a pip-installable pyoorb.  pyoorb is the python interface to [OpenOrb](https://github.com/oorb/oorb), an orbit computation package.  The original pyoorb source is distributed with OpenOrb.
+This repository is a demo to make a pip-installable `pyoorb`.  `pyoorb` is the python interface to [OpenOrb](https://github.com/oorb/oorb), an orbit computation package.  The original `pyoorb` source is distributed with OpenOrb.
 
 Only the default ephemeris data are downloaded.
 
@@ -20,4 +20,8 @@ python3 setup.py install
 
 ## Implementation
 
-OpenOrb is included as a git submodule.  A custom setuptools build_ext command configures OpenOrb to use gfortran, build the libraries, and download the default ephemeris data.  Numpy is used to build the FORTRAN extension library.  This was always the case with pyoorb included with OpenOrb, but here we use setup.py to build the FORTRAN signature file and library, rather than build it with a Makefile.  In order to compile the extension, the relevant files are copied from the OpenOrb source tree to a local `src` directory.
+OpenOrb is included as a git submodule.  A custom setuptools build_ext command configures OpenOrb to use gfortran, build the libraries, and download the default ephemeris data.
+
+Numpy is used to build the FORTRAN extension library.  This was always the case with `pyoorb` included with OpenOrb, but here we use setup.py to build the FORTRAN signature file and library, rather than build it with a Makefile.  In order to compile the extension, relevant files are copied from the OpenOrb source tree to a local `src` directory.
+
+Data files are copied into the python library's installation location.  `pyoorb` sets the `'OORB_DATA'` environment to make them discoverable by liboorb.  If `'OORB_DATA'` is already defined (as described in the OpenOrb documentation), that location will take precedence.
