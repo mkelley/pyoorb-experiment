@@ -32,9 +32,7 @@ class PyoorbBuildSrc(build_src):
     def make(self):
         """Builds oorb, required to build the pyoorb extension."""
         if not os.path.exists('oorb/lib/liboorb.a'):
-            cmd = ['make']
-            if self.parallel:
-                cmd += ['-j']
+            cmd = ['make', '-j']
             subprocess.check_call(cmd, cwd='oorb')
 
     def download_ephem(self):
