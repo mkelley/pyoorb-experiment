@@ -72,3 +72,5 @@ distribute-*.tar.gz
 .vscode
 
 src/
+pyoorb/data/*dat
+pyoorb/VERSION

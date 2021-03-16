@@ -4,6 +4,7 @@
 import os
 from glob import glob
 import shutil
+import setuptools
 from numpy.distutils.core import setup, Extension as NumpyExtension
 from numpy.distutils.command.build_src import build_src
 
@@ -20,25 +21,30 @@ class PyoorbBuildSrc(build_src):
 
     def configure(self):
         """Configures oorb to build with gfortran and optimization."""
-        cmd = [
-            './configure',
-            'gfortran',
-            'opt',
-        ]
-        subprocess.check_call(cmd, cwd='oorb')
+        if not os.path.exists('oorb/Makefile.include'):
+            cmd = [
+                './configure',
+                'gfortran',
+                'opt',
+            ]
+            subprocess.check_call(cmd, cwd='oorb')
 
     def make(self):
-        """Builds oorb."""
-        cmd = ['make', '-j']
-        subprocess.check_call(cmd, cwd='oorb')
+        """Builds oorb, required to build the pyoorb extension."""
+        if not os.path.exists('oorb/lib/liboorb.a'):
+            cmd = ['make']
+            if self.parallel:
+                cmd += ['-j']
+            subprocess.check_call(cmd, cwd='oorb')
 
     def download_ephem(self):
         """Downloads the default oorb ephemeris."""
-        cmd = ['make', 'ephem']
-        subprocess.check_call(cmd, cwd='oorb')
+        if not os.path.exists('oorb/data/de430.dat'):
+            cmd = ['make', 'ephem']
+            subprocess.check_call(cmd, cwd='oorb')
 
     def copy_files(self):
-        """Copies fortran-python interface and supporting files."""
+        """Copies fortran-python interface and data files."""
         if not os.path.exists('src'):
             os.mkdir('src')
         files = [
@@ -53,7 +59,19 @@ class PyoorbBuildSrc(build_src):
             'oorb/python/pyoorb.f90',
         ]
         for f in files:
-            shutil.copy(f, 'src')
+            if not os.path.exists(os.path.join(
+                'src', os.path.basename(f)
+            )):
+                shutil.copy(f, 'src')
+
+        path = 'pyoorb/data'
+        for f in glob('oorb/data/*.dat'):
+            if not os.path.exists(os.path.join(
+                path, os.path.basename(f)
+            )):
+                shutil.copy(f, path)
+
+        shutil.copy('oorb/VERSION', 'pyoorb')
 
 
 def version():
@@ -72,7 +90,8 @@ setup(
         libraries=['lapack'],
         extra_objects=['oorb/lib/liboorb.a']
     )],
-    data_files=[
-        ('oorb', glob('oorb/data/*.dat') + ['oorb/VERSION'])
-    ]
+    # install data files
+    package_data={
+        'pyoorb': ['data/*.dat', 'VERSION']
+    }
 )
