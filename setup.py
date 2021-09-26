@@ -15,7 +15,7 @@ class PyoorbBuildSrc(build_src):
     def run(self):
         self.configure()
         self.make()
-        self.download_ephem()
+        # self.download_ephem()
         self.copy_files()
         super().run()
 
