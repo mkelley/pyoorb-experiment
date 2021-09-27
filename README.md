@@ -27,15 +27,9 @@ Numpy is used to build the FORTRAN extension library.  This was always the case 
 Data files are copied into the python library's installation location.  `pyoorb` sets the `'OORB_DATA'` environment to make them discoverable by liboorb.  If `'OORB_DATA'` is already defined (as described in the OpenOrb documentation), that location will take precedence.
 
 ## sbpy testing
-For sbpy testing, the ephemeris is stored in order to speed up CI runs.  The ephemeris is stored via git LFS:
+For sbpy testing, a test ephemeris is stored in order to speed up CI runs, and the ephemeris file building is disabled.  The ephemeris is limited to 1990 to 2030, following the instructions in asc2eph.f90 in OpenOrb's data/JPL_ephemeris directory, i.e., set
 ```
-git submodule update --init
-python3 setup.py build_ext
-git add pyoorb/data/ET-UT.dat 
-git add pyoorb/data/OBSCODE.dat 
-git add pyoorb/data/TAI-UTC.dat 
-git lfs track pyoorb/data/de430.dat
-git add .gitattributes
-git add pyoorb/data/de430.dat
+  t1 = 2447892.5
+  t2 = 2462502.5
 ```
-Then commit as normal.
+Then make the `de430.dat` file, copy to pyoorb/data/, and check-in with git.
