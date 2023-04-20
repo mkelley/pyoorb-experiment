@@ -5,11 +5,19 @@ import os
 from glob import glob
 import shutil
 import setuptools
+from distutils.spawn import find_executable
 from numpy.distutils.core import setup, Extension as NumpyExtension
 from numpy.distutils.command.build_src import build_src
 
 import subprocess
 
+def gfortran_exec():
+    """Find a gfortran executable."""
+    for name in ("gfortran", "gfortran-11", "gfortran-12", "gfortran-10"):
+        path = find_executable(name)
+        if path is not None:
+            return path
+    raise FileNotFoundError("Cannot find gfortran executable.")
 
 class PyoorbBuildSrc(build_src):
     def run(self):
@@ -21,10 +29,11 @@ class PyoorbBuildSrc(build_src):
 
     def configure(self):
         """Configures oorb to build with gfortran and optimization."""
+        
         if not os.path.exists('oorb/Makefile.include'):
             cmd = [
                 './configure',
-                'gfortran',
+                gfortran_exec(),
                 'opt',
             ]
             subprocess.check_call(cmd, cwd='oorb')
