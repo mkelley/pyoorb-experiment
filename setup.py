@@ -46,7 +46,8 @@ class PyoorbBuildSrc(build_src):
         if not os.path.exists("oorb/Makefile.include"):
             cmd = [
                 "./configure",
-                "gfortran" "opt",
+                "gfortran",
+                "opt",
             ]
             subprocess.check_call(cmd, cwd="oorb", env=self.env)
 
