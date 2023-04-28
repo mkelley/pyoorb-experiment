@@ -13,7 +13,6 @@ import subprocess
 
 class PyoorbBuildSrc(build_src):
     def run(self):
-        self.env = os.environ.copy()
         self.find_gfortran()
         self.configure()
         self.make()
@@ -23,45 +22,49 @@ class PyoorbBuildSrc(build_src):
 
     def find_gfortran(self):
         """Find a gfortran executable."""
-        if os.environ.get("FC_GFORTRAN") is not None:
-            gfortran = shutil.which(name)
-        else:
+        gfortran = os.environ.get("FC_GFORTRAN")
+        if gfortran is None:
             for name in ("gfortran", "gfortran-11", "gfortran-12", "gfortran-10"):
                 gfortran = shutil.which(name)
                 if gfortran is not None:
                     break
+            else:
+                raise FileNotFoundError("Cannot find gfortran executable.")
+        else:
+            if shutil.which(gfortran) is None:
+                FileNotFoundError(
+                    "Cannot find gfortran executable " + gfortran)
 
-        if gfortran is None:
-            fc = (
-                ""
-                if os.environ.get("FC_GFORTRAN") is None
-                else f"  FC_GFORTRAN = {os.environ.get('FC_GFORTRAN')}"
-            )
-            raise FileNotFoundError("Cannot find gfortran executable." + fc)
-
-        self.env["FC_GFORTRAN"] = gfortran
+        self.gfortran = gfortran
 
     def configure(self):
         """Configures oorb to build with gfortran and optimization."""
         if not os.path.exists("oorb/Makefile.include"):
+            # use whatever gfortran we found
+            with open("oorb/make.config", "r") as inf:
+                with open("oorb/make.config.new", "w") as outf:
+                    for line in inf:
+                        outf.write(line.replace("gfortran", self.gfortran))
+            shutil.move("oorb/make.config.new", "oorb/make.config")
+
             cmd = [
                 "./configure",
                 "gfortran",
                 "opt",
             ]
-            subprocess.check_call(cmd, cwd="oorb", env=self.env)
+            subprocess.check_call(cmd, cwd="oorb")
 
     def make(self):
         """Builds oorb, required to build the pyoorb extension."""
         if not os.path.exists("oorb/lib/liboorb.a"):
             cmd = ["make", "-j"]
-            subprocess.check_call(cmd, cwd="oorb", env=self.env)
+            subprocess.check_call(cmd, cwd="oorb")
 
     def download_ephem(self):
         """Downloads the default oorb ephemeris."""
         if not os.path.exists("oorb/data/de430.dat"):
             cmd = ["make", "ephem"]
-            subprocess.check_call(cmd, cwd="oorb", env=self.env)
+            subprocess.check_call(cmd, cwd="oorb")
 
     def copy_files(self):
         """Copies fortran-python interface and data files."""
@@ -92,6 +95,8 @@ class PyoorbBuildSrc(build_src):
 
 def version():
     """Generate version using oorb script."""
+    print(subprocess.check_output(['pwd']))
+
     cmd = ["./build-tools/compute-version.sh"]
     return subprocess.check_output(cmd, cwd="oorb").decode().strip()
 

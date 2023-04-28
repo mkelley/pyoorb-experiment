@@ -1,0 +1,18 @@
+name: CI Tests
+
+on:
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+  pull_request:
+    # branches: # only build on PRs against 'main' if you need to further limit when CI is run.
+    #    - main
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: pip install -e .
