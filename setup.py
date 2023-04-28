@@ -44,7 +44,10 @@ class PyoorbBuildSrc(build_src):
             with open("oorb/make.config", "r") as inf:
                 with open("oorb/make.config.new", "w") as outf:
                     for line in inf:
-                        outf.write(line.replace("gfortran", self.gfortran))
+                        if line.startswith("FC_GFORTRAN"):
+                            line = f"FC_GFORTRAN               = {self.gfortran}\n"
+                        outf.write(line)
+
             shutil.move("oorb/make.config.new", "oorb/make.config")
 
             cmd = [
